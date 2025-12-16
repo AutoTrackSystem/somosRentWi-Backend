@@ -4,5 +4,8 @@ namespace SomosRentWi.Domain.IRepositories;
 
 public interface IClientRepository
 {
+    Task<Client?> GetByIdAsync(int id);
+    Task<Client?> GetByUserIdAsync(int userId);
     Task AddAsync(Client client);
+    Task UpdateAsync(Client client);
 }
