@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SomosRentWi.Application.Security;
 using SomosRentWi.Domain.Entities;
+using SomosRentWi.Domain.Enums;
 
 namespace SomosRentWi.Infrastructure.Persistence.Configurations;
 
@@ -28,5 +30,16 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.IsActive)
             .IsRequired();
+
+        // Seed: Admin user
+        var passwordHasher = new PasswordHasher();
+        builder.HasData(new User
+        {
+            Id = 1,
+            Email = "admin@somosrentwi.com",
+            PasswordHash = passwordHasher.Hash("Admin123!"),
+            Role = UserRole.Admin,
+            IsActive = true
+        });
     }
 }

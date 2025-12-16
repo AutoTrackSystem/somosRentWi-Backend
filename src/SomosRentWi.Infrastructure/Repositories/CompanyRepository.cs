@@ -14,6 +14,32 @@ public class CompanyRepository : ICompanyRepository
         _context = context;
     }
 
+    public async Task<Company?> GetByIdAsync(int id)
+    {
+        return await _context.Companies
+            .Include(c => c.User)
+            .Include(c => c.Wallet)
+            .Include(c => c.Cars)
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<Company?> GetByUserIdAsync(int userId)
+    {
+        return await _context.Companies
+            .Include(c => c.User)
+            .Include(c => c.Wallet)
+            .Include(c => c.Cars)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+    }
+
+    public async Task<List<Company>> GetAllAsync()
+    {
+        return await _context.Companies
+            .Include(c => c.User)
+            .Include(c => c.Wallet)
+            .ToListAsync();
+    }
+
     public async Task<bool> ExistsByNitAsync(string nit)
     {
         return await _context.Companies.AnyAsync(c => c.NitNumber == nit);
@@ -24,8 +50,9 @@ public class CompanyRepository : ICompanyRepository
         await _context.Companies.AddAsync(company);
     }
 
-    public async Task SaveChangesAsync()
+    public Task UpdateAsync(Company company)
     {
-        await _context.SaveChangesAsync();
+        _context.Companies.Update(company);
+        return Task.CompletedTask;
     }
 }
