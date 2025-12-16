@@ -26,9 +26,13 @@ EXPOSE 8080
 EXPOSE 8081
 
 COPY --from=publish /app/publish .
+COPY entrypoint.sh /app/entrypoint.sh
 
-# Set environment variable to disable .env file loading in Docker
-ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
+# Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
 
-ENTRYPOINT ["dotnet", "SomosRentWi.Api.dll"]
+ENTRYPOINT ["/app/entrypoint.sh"]
