@@ -170,7 +170,24 @@ builder.Services.AddSwaggerGen(options =>
 // =============================================================
 // JWT AUTHENTICATION
 // =============================================================
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "your-secret-key-here";
+// =============================================================
+// JWT AUTHENTICATION
+// =============================================================
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+
+if (string.IsNullOrEmpty(jwtSecret))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        jwtSecret = "development-only-secret-key-must-be-very-long-safe";
+        Console.WriteLine("⚠️ Using development JWT secret fallback");
+    }
+    else
+    {
+        throw new Exception("CRITICAL: JWT_SECRET environment variable is missing for production deployment.");
+    }
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -184,7 +201,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = "SomosRentWi",
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSecret)
-            )
+            ),
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role // Explicitly map role claim
         };
     });
 
@@ -193,13 +211,16 @@ builder.Services.AddAuthorization();
 // =============================================================
 // CORS
 // =============================================================
+var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")?.Split(',') ?? new[] { "http://localhost:3000", "http://localhost:5173" };
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowedOrigins", policy => // Renamed for truthfulness
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -259,7 +280,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger"; // Access at /swagger
 });
 
-app.UseCors("AllowAll");
+app.UseCors("AllowedOrigins");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

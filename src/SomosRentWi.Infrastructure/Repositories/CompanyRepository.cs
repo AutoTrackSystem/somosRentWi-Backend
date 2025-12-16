@@ -45,6 +45,14 @@ public class CompanyRepository : ICompanyRepository
         return await _context.Companies.AnyAsync(c => c.NitNumber == nit);
     }
 
+    public async Task<Company?> GetByNitAsync(string nit)
+    {
+        return await _context.Companies
+            .Include(c => c.User)
+            .Include(c => c.Wallet)
+            .FirstOrDefaultAsync(c => c.NitNumber == nit);
+    }
+
     public async Task AddAsync(Company company)
     {
         await _context.Companies.AddAsync(company);

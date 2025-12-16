@@ -1,6 +1,7 @@
 using SomosRentWi.Application.Cars.DTOs;
 using SomosRentWi.Application.Cars.Interfaces;
 using SomosRentWi.Application.Services;
+using SomosRentWi.Domain.Exceptions;
 using SomosRentWi.Domain.Entities;
 using SomosRentWi.Domain.Enums;
 using SomosRentWi.Domain.IRepositories;
@@ -26,12 +27,14 @@ public class CarService : ICarService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<CarResponse> CreateCarAsync(CreateCarRequest request, int companyId)
+    public async Task<CarResponse> CreateCarAsync(CreateCarRequest request, int userId)
     {
-        // Verify company exists
-        var company = await _companyRepository.GetByIdAsync(companyId);
+        // Verify company exists for this user
+        var company = await _companyRepository.GetByUserIdAsync(userId);
         if (company == null)
-            throw new Exception("Company not found");
+            throw new DomainException("Company not found for this user");
+
+        var companyId = company.Id; // Use resolved CompanyId
 
         // Upload photo to Cloudinary if provided
         string photoUrl = string.Empty;
@@ -83,20 +86,34 @@ public class CarService : ICarService
         return cars.Select(c => MapToResponse(c, c.Company!)).ToList();
     }
 
+    public async Task<List<CarResponse>> GetCarsByUserIdAsync(int userId)
+    {
+        var company = await _companyRepository.GetByUserIdAsync(userId);
+        if (company == null)
+            throw new DomainException("Company not found for this user");
+            
+        return await GetCarsByCompanyIdAsync(company.Id);
+    }
+
     public async Task<List<CarResponse>> GetAllCarsAsync()
     {
         var cars = await _carRepository.GetAllAsync();
         return cars.Select(c => MapToResponse(c, c.Company!)).ToList();
     }
 
-    public async Task<CarResponse> UpdateCarAsync(int id, UpdateCarRequest request, int companyId)
+    public async Task<CarResponse> UpdateCarAsync(int id, UpdateCarRequest request, int userId)
     {
+        // Resolve company
+        var company = await _companyRepository.GetByUserIdAsync(userId);
+        if (company == null)
+            throw new DomainException("Company not found for this user");
+
         var car = await _carRepository.GetByIdAsync(id);
         if (car == null)
-            throw new Exception("Car not found");
+            throw new DomainException("Car not found");
 
-        if (car.CompanyId != companyId)
-            throw new Exception("Unauthorized: Car does not belong to your company");
+        if (car.CompanyId != company.Id)
+            throw new DomainException("Unauthorized: Car does not belong to your company");
 
         // Update fields if provided
         if (!string.IsNullOrWhiteSpace(request.Brand))
@@ -142,7 +159,7 @@ public class CarService : ICarService
 
             car.MainPhotoUrl = await _cloudinaryService.UploadPhotoAsync(
                 request.MainPhoto, 
-                $"car-photos/company-{companyId}");
+                $"car-photos/company-{company.Id}");
         }
 
         await _carRepository.UpdateAsync(car);
@@ -151,14 +168,19 @@ public class CarService : ICarService
         return MapToResponse(car, car.Company!);
     }
 
-    public async Task DeleteCarAsync(int id, int companyId)
+    public async Task DeleteCarAsync(int id, int userId)
     {
+        // Resolve company
+        var company = await _companyRepository.GetByUserIdAsync(userId);
+        if (company == null)
+            throw new DomainException("Company not found for this user");
+
         var car = await _carRepository.GetByIdAsync(id);
         if (car == null)
-            throw new Exception("Car not found");
+            throw new DomainException("Car not found");
 
-        if (car.CompanyId != companyId)
-            throw new Exception("Unauthorized: Car does not belong to your company");
+        if (car.CompanyId != company.Id)
+            throw new DomainException("Unauthorized: Car does not belong to your company");
 
         await _carRepository.DeleteAsync(car);
         await _unitOfWork.SaveChangesAsync();

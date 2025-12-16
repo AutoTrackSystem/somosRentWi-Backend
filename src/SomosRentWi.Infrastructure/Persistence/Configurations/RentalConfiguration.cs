@@ -15,6 +15,10 @@ public sealed class RentalConfiguration : IEntityTypeConfiguration<Rental>
         builder.Property(x => x.StartDate).IsRequired();
         builder.Property(x => x.EndDate);
 
+        builder.Property(x => x.PricePerHour)
+            .HasPrecision(18, 2)
+            .IsRequired();
+
         builder.Property(x => x.TotalPrice)
             .HasPrecision(18, 2)
             .IsRequired();

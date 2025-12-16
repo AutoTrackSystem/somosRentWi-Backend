@@ -5,5 +5,7 @@ public enum RentalStatus
     PendingDelivery,
     InProgress,
     FinishedCorrect, 
-    FinishedWithIssue
+    FinishedWithIssue,
+    Cancelled,
+    Rejected
 }

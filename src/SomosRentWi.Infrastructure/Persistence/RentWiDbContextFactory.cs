@@ -9,7 +9,7 @@ public class RentWiDbContextFactory
 {
     public RentWiDbContext CreateDbContext(string[] args)
     {
-        Env.Load("../.env");
+        Env.Load("../../.env");
 
         var host = Environment.GetEnvironmentVariable("DB_HOST");
         var port = Environment.GetEnvironmentVariable("DB_PORT");

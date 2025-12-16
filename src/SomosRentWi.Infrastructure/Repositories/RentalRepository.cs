@@ -21,6 +21,9 @@ public class RentalRepository : IRentalRepository
                 .ThenInclude(c => c.User)
             .Include(r => r.Company)
                 .ThenInclude(c => c.User)
+            .Include(r => r.Company)
+                .ThenInclude(c => c.Wallet)
+                    .ThenInclude(w => w!.Transactions) // Load transactions for history/updates
             .Include(r => r.Car)
             .FirstOrDefaultAsync(r => r.Id == id);
     }
@@ -85,5 +88,20 @@ public class RentalRepository : IRentalRepository
     {
         _context.Rentals.Update(rental);
         return Task.CompletedTask;
+    }
+
+    public async Task<bool> HasOverlappingRentalAsync(int carId, DateTime startDate, DateTime endDate)
+    {
+        // Canonical Overlap: StartA < EndB && EndA > StartB
+        return await _context.Rentals
+            .AnyAsync(r => r.CarId == carId &&
+                           // Exclude non-blocking statuses
+                           r.Status != Domain.Enums.RentalStatus.FinishedCorrect && 
+                           r.Status != Domain.Enums.RentalStatus.FinishedWithIssue &&
+                           r.Status != Domain.Enums.RentalStatus.Rejected &&
+                           r.Status != Domain.Enums.RentalStatus.Cancelled &&
+                           // Overlap check
+                           startDate < (r.EndDate ?? DateTime.MaxValue) && 
+                           endDate > r.StartDate);
     }
 }
