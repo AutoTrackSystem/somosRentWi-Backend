@@ -8,6 +8,7 @@ public interface ICompanyRepository
     Task<Company?> GetByUserIdAsync(int userId);
     Task<List<Company>> GetAllAsync();
     Task<bool> ExistsByNitAsync(string nit);
+    Task<Company?> GetByNitAsync(string nit);
     Task AddAsync(Company company);
     Task UpdateAsync(Company company);
 }

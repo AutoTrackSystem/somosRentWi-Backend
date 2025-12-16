@@ -3,6 +3,7 @@ using SomosRentWi.Application.Companies.Interfaces;
 using SomosRentWi.Application.Security;
 using SomosRentWi.Domain.Entities;
 using SomosRentWi.Domain.Enums;
+using SomosRentWi.Domain.Exceptions;
 using SomosRentWi.Domain.IRepositories;
 
 namespace SomosRentWi.Application.Companies.Services;
@@ -28,14 +29,15 @@ public class CompanyService : ICompanyService
 
     public async Task<CompanyResponse> CreateCompanyAsync(CreateCompanyRequest request)
     {
-        await _unitOfWork.SaveChangesAsync();
-
+        // 1. Validation
         if (await _userRepository.ExistsByEmailAsync(request.Email))
-            throw new Exception("Email already exists");
+            throw new DomainException("Email already exists");
 
         if (await _companyRepository.ExistsByNitAsync(request.NitNumber))
-            throw new Exception("Company already exists");
+            throw new DomainException("Company already exists in the system");
 
+        // 2. Create Aggregates
+        // Create User (Auth)
         var user = new User
         {
             Email = request.Email,
@@ -44,19 +46,41 @@ public class CompanyService : ICompanyService
             IsActive = true
         };
 
-        await _userRepository.AddAsync(user);
-
+        // Create Company linked to User via Object reference (not Id)
         var company = new Company
         {
-            UserId = user.Id,
+            User = user, // Link navigation property
             TradeName = request.TradeName,
             NitNumber = request.NitNumber,
+            ContactEmail = request.ContactEmail,
+            LandlineNumber = request.LandlineNumber,
+            MobilePhone = request.MobilePhone,
+            Address = request.Address,
+            Website = request.Website,
             CompanyPlan = request.CompanyPlan,
-            SubscriptionStatus = CompanySubscriptionStatus.Active
+            SubscriptionStatus = CompanySubscriptionStatus.Active,
+            StartSubscriptionDate = DateTime.UtcNow
         };
 
-        await _companyRepository.AddAsync(company);
+        // Create Wallet linked to Company
+        var wallet = new CompanyWallet
+        {
+            Balance = 0,
+            Company = company // Explicit bi-directional link helps
+        };
+        
+        company.Wallet = wallet;
 
+        // 3. Add to Repository (Graph)
+        // Adding the root (Company) is sufficient if proper links exist, 
+        // but adding User explicitly is also fine and clearer for intent.
+        await _userRepository.AddAsync(user);
+        await _companyRepository.AddAsync(company);
+        
+        // 4. Atomic Commit
+        // The UnitOfWork.SaveChangesAsync() call below commits all changes (User, Company, Wallet) 
+        // in a single database transaction because they are all added to the same context.
+        // This satisfies the atomic invariant: Company cannot exist without User and Wallet.
         await _unitOfWork.SaveChangesAsync();
 
         return new CompanyResponse

@@ -26,8 +26,8 @@ public class RentalsController : ControllerBase
     {
         try
         {
-            var clientId = GetClientIdFromClaims();
-            var result = await _rentalService.CreateRentalAsync(request, clientId);
+            var userId = GetUserIdFromClaims();
+            var result = await _rentalService.CreateRentalAsync(request, userId);
             return Ok(result);
         }
         catch (Exception ex)
@@ -66,8 +66,8 @@ public class RentalsController : ControllerBase
     {
         try
         {
-            var clientId = GetClientIdFromClaims();
-            var rentals = await _rentalService.GetRentalsByClientIdAsync(clientId);
+            var userId = GetUserIdFromClaims();
+            var rentals = await _rentalService.GetRentalsByClientIdAsync(userId);
             return Ok(rentals);
         }
         catch (Exception ex)
@@ -85,8 +85,8 @@ public class RentalsController : ControllerBase
     {
         try
         {
-            var companyId = GetCompanyIdFromClaims();
-            var rentals = await _rentalService.GetRentalsByCompanyIdAsync(companyId);
+            var userId = GetUserIdFromClaims();
+            var rentals = await _rentalService.GetRentalsByCompanyIdAsync(userId);
             return Ok(rentals);
         }
         catch (Exception ex)
@@ -104,8 +104,8 @@ public class RentalsController : ControllerBase
     {
         try
         {
-            var companyId = GetCompanyIdFromClaims();
-            var result = await _rentalService.DeliverRentalAsync(id, companyId);
+            var userId = GetUserIdFromClaims();
+            var result = await _rentalService.DeliverRentalAsync(id, userId);
             return Ok(result);
         }
         catch (Exception ex)
@@ -123,8 +123,8 @@ public class RentalsController : ControllerBase
     {
         try
         {
-            var companyId = GetCompanyIdFromClaims();
-            var result = await _rentalService.CompleteRentalAsync(id, companyId);
+            var userId = GetUserIdFromClaims();
+            var result = await _rentalService.CompleteRentalAsync(id, userId);
             return Ok(result);
         }
         catch (Exception ex)
@@ -151,25 +151,18 @@ public class RentalsController : ControllerBase
         }
     }
 
-    private int GetClientIdFromClaims()
+    private int GetUserIdFromClaims()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                          ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                          
         if (string.IsNullOrEmpty(userIdClaim))
             throw new Exception("User not authenticated");
 
-        // TODO: Fetch actual ClientId from database using UserId
         return int.Parse(userIdClaim);
     }
 
-    private int GetCompanyIdFromClaims()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim))
-            throw new Exception("User not authenticated");
 
-        // TODO: Fetch actual CompanyId from database using UserId
-        return int.Parse(userIdClaim);
-    }
 }
 
 public class CancelRentalRequest

@@ -17,8 +17,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public string Generate(int userId, UserRole role)
     {
-        var secret = _configuration["JWT_SECRET"]
-                     ?? throw new Exception("JWT_SECRET not configured");
+        var secret = Environment.GetEnvironmentVariable("JWT_SECRET")
+                    ?? throw new Exception("JWT_SECRET not configured");
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(secret)

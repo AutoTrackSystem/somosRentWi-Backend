@@ -17,6 +17,7 @@ public class Rental
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
     public DateTime? EndDate { get; set; }
     
+    public decimal PricePerHour { get; set; } // Snapshot at booking time
     public decimal TotalPrice { get; set; }
     public decimal DepositAmount { get; set; }
 
