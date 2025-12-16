@@ -13,7 +13,7 @@ namespace SomosRentWi.Infrastructure.Persistence.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "Id", "Email", "IsActive", "PasswordHash", "Role" },
-                values: new object[] { 1, "admin@somosrentwi.com", true, "PrP+ZrMeO00Q+nC1ytSccRIpSvauTkdqHEBRVdRaoSE=", 0 });
+                values: new object[] { 4, "admin@somosrentwi.com", true, "PrP+ZrMeO00Q+nC1ytSccRIpSvauTkdqHEBRVdRaoSE=", 0 });
         }
 
         /// <inheritdoc />
@@ -22,7 +22,7 @@ namespace SomosRentWi.Infrastructure.Persistence.Migrations
             migrationBuilder.DeleteData(
                 table: "Users",
                 keyColumn: "Id",
-                keyValue: 1);
+                keyValue: 4);
         }
     }
 }
