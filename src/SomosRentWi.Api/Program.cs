@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SomosRentWi.Application.Companies.Interfaces;
 using SomosRentWi.Application.Companies.Services;
+using SomosRentWi.Application.Security;
 using SomosRentWi.Domain.IRepositories;
 using SomosRentWi.Infrastructure;
 using SomosRentWi.Infrastructure.Persistence;
@@ -45,6 +46,8 @@ builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
