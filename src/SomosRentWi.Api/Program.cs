@@ -47,8 +47,14 @@ var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
 var dbname = Environment.GetEnvironmentVariable("DB_NAME");
 var ssl = Environment.GetEnvironmentVariable("DB_SSL_MODE");
 
+// Debug logging for Railway
+Console.WriteLine($"🔍 DB_HOST: {(string.IsNullOrEmpty(host) ? "NOT SET" : host)}");
+Console.WriteLine($"🔍 DB_PORT: {(string.IsNullOrEmpty(port) ? "NOT SET" : port)}");
+Console.WriteLine($"🔍 DB_NAME: {(string.IsNullOrEmpty(dbname) ? "NOT SET" : dbname)}");
+Console.WriteLine($"🔍 DB_USER: {(string.IsNullOrEmpty(user) ? "NOT SET" : "***")}");
+
 var connectionString =
-    $"server={host};port={port};database={dbname};user={user};password={pass};SslMode={ssl};";
+    $"server={host};port={port};database={dbname};user={user};password={pass};SslMode={ssl}";
 
 builder.Services.AddDbContext<RentWiDbContext>(options =>
 {
@@ -61,6 +67,9 @@ builder.Services.AddDbContext<RentWiDbContext>(options =>
 var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
 var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
 var apiSecret = Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET");
+
+Console.WriteLine($"🔍 CLOUDINARY_CLOUD_NAME: {(string.IsNullOrEmpty(cloudName) ? "NOT SET" : cloudName)}");
+Console.WriteLine($"🔍 CLOUDINARY_API_KEY: {(string.IsNullOrEmpty(apiKey) ? "NOT SET" : "***")}");
 
 if (!string.IsNullOrEmpty(cloudName) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
 {
