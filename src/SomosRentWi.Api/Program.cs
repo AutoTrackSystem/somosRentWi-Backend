@@ -1,6 +1,5 @@
 using System.Text;
 using CloudinaryDotNet;
-using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -23,20 +22,31 @@ using SomosRentWi.Infrastructure.Repositories;
 using SomosRentWi.Infrastructure.Services;
 
 // =============================================================
-// LOAD ENVIRONMENT VARIABLES
-// =============================================================
-// Only load .env in Development (not in Docker/Production)
-var envPath = "../../.env";
-if (File.Exists(envPath))
-{
-    Env.Load(envPath);
-    Console.WriteLine("✅ Loaded environment variables from .env file");
-}
-
-// =============================================================
 // APP BUILDER
 // =============================================================
 var builder = WebApplication.CreateBuilder(args);
+
+// Load .env file only in Development (for local development)
+if (builder.Environment.IsDevelopment())
+{
+    var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+    if (File.Exists(envPath))
+    {
+        Console.WriteLine("✅ Loading .env file for local development");
+        foreach (var line in File.ReadAllLines(envPath))
+        {
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
+            
+            var parts = line.Split('=', 2);
+            if (parts.Length == 2)
+            {
+                var key = parts[0].Trim();
+                var value = parts[1].Trim().Trim('"');
+                Environment.SetEnvironmentVariable(key, value);
+            }
+        }
+    }
+}
 
 // =============================================================
 // CONFIG: DATABASE
