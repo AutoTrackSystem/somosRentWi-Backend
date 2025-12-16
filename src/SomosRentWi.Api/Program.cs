@@ -243,11 +243,13 @@ using (var scope = app.Services.CreateScope())
 // =============================================================
 // MIDDLEWARE PIPELINE
 // =============================================================
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments (including Production for Railway)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SomosRentWi API v1");
+    c.RoutePrefix = "swagger"; // Access at /swagger
+});
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
