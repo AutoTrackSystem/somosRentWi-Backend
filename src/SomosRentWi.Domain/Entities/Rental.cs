@@ -1,10 +1,10 @@
-using SomosRentWi.Domain.Common;
 using SomosRentWi.Domain.Enums;
 
 namespace SomosRentWi.Domain.Entities;
 
-public class Rental : BaseEntity
+public class Rental
 {
+    public int Id { get; set; }
     public int ClientId { get; set; }
     public required Client Client { get; set;}
     

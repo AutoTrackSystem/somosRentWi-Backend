@@ -1,10 +1,10 @@
-using SomosRentWi.Domain.Common;
 using SomosRentWi.Domain.Enums;
 
 namespace SomosRentWi.Domain.Entities;
 
-public class Company : BaseEntity
+public class Company
 {
+    public int Id { get; set; }
     public int UserId { get; set; }
     public User? User { get; set; }
     
@@ -22,4 +22,7 @@ public class Company : BaseEntity
     
     public DateTime? StartSubscriptionDate { get; set; }
     public DateTime? EndSubscriptionDate { get; set; }
+    
+    public CompanyWallet? Wallet { get; set; }
+    public ICollection<Car> Cars { get; set; } = new List<Car>();
 }
