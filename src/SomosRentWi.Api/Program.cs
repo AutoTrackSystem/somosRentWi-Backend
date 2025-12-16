@@ -11,6 +11,7 @@ using SomosRentWi.Application.Cars.Interfaces;
 using SomosRentWi.Application.Cars.Services;
 using SomosRentWi.Application.Companies.Interfaces;
 using SomosRentWi.Application.Companies.Services;
+using SomosRentWi.Application.Security;
 using SomosRentWi.Application.Rentals.Interfaces;
 using SomosRentWi.Application.Rentals.Services;
 using SomosRentWi.Application.Security;
@@ -99,6 +100,8 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
 
 // =============================================================
 // CONTROLLERS
