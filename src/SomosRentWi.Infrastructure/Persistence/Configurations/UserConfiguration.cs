@@ -35,7 +35,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         var passwordHasher = new PasswordHasher();
         builder.HasData(new User
         {
-            Id = 1,
+            Id = 4,
             Email = "admin@somosrentwi.com",
             PasswordHash = passwordHasher.Hash("Admin123!"),
             Role = UserRole.Admin,
