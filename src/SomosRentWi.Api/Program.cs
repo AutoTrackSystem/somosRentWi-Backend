@@ -222,11 +222,20 @@ using (var scope = app.Services.CreateScope())
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("DATABASE CONNECTED SUCCESSFULLY");
+            Console.ResetColor();
+            
+            // Apply pending migrations automatically
+            Console.WriteLine("Applying pending migrations...");
+            db.Database.Migrate();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("MIGRATIONS APPLIED SUCCESSFULLY");
+            Console.ResetColor();
         }
         else
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("DATABASE CONNECTION FAILED");
+            Console.ResetColor();
         }
     }
     catch (Exception ex)
@@ -236,8 +245,6 @@ using (var scope = app.Services.CreateScope())
         Console.ResetColor();
         Console.WriteLine(ex.Message);
     }
-
-    Console.ResetColor();
 }
 
 // =============================================================
