@@ -1,6 +1,14 @@
-using SomosRentWi.Infrastructure.Data;
+using System.Text;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using SomosRentWi.Application.Companies.Interfaces;
+using SomosRentWi.Application.Companies.Services;
+using SomosRentWi.Domain.IRepositories;
+using SomosRentWi.Infrastructure;
+using SomosRentWi.Infrastructure.Persistence;
+using SomosRentWi.Infrastructure.Repositories;
 
 // =============================================================
 // LOAD ENVIRONMENT VARIABLES
@@ -25,15 +33,44 @@ var ssl = Environment.GetEnvironmentVariable("DB_SSL_MODE");
 var connectionString =
     $"server={host};port={port};database={dbname};user={user};password={pass};SslMode={ssl};";
 
-builder.Services.AddDbContext<SomosRentWiDbContext>(options =>
+builder.Services.AddDbContext<RentWiDbContext>(options =>
 {
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0)));
 });
 
 // Add services to the container.
+
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// =============================================================
+// JWT
+// =============================================================
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "SomosRentWi",
+            ValidAudience = "SomosRentWi",
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JWT_SECRET"]!)
+            )
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // =============================================================
 // BUILD APP
@@ -45,7 +82,7 @@ var app = builder.Build();
 // =============================================================
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<SomosRentWiDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<RentWiDbContext>();
 
     Console.WriteLine("Checking database connection...");
 
@@ -79,6 +116,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.Run();

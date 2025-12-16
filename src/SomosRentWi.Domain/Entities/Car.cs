@@ -1,10 +1,10 @@
-using SomosRentWi.Domain.Common;
 using SomosRentWi.Domain.Enums;
 
 namespace SomosRentWi.Domain.Entities;
 
-public class Car : BaseEntity
+public class Car
 {
+    public int Id { get; set; }
     public int CompanyId { get; set; }
     public Company? Company { get; set; }
     
@@ -15,7 +15,8 @@ public class Car : BaseEntity
     public string Color { get; set; } = string.Empty;
     
     public decimal CommercialValue { get; set; }
-    public decimal PricePerDay { get; set; }
+    public decimal BasePricePerHour { get; set; }
+    public decimal PricePerHour { get; set; }
     
     public DateTime SoatExpirationDate { get; set; }
     public DateTime TechExpirationDate { get; set; }

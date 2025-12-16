@@ -1,12 +1,12 @@
-using SomosRentWi.Domain.Common;
 using SomosRentWi.Domain.Enums;
 
 namespace SomosRentWi.Domain.Entities;
 
-public class User : BaseEntity
+public class User
 {
+    public int Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
-    public UserRole Role { get; set; } = UserRole.Guest;
+    public UserRole Role { get; set; }
     public bool IsActive { get; set; } = true;
 }
