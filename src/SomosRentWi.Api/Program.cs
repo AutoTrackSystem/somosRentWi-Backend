@@ -25,6 +25,7 @@ using SomosRentWi.Infrastructure.Services;
 // APP BUILDER
 // =============================================================
 var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine("🚀 Starting SomosRentWi API - Version: Admin Fix (ID 4)");
 
 // Load .env file only in Development (for local development)
 if (builder.Environment.IsDevelopment())
