@@ -6,15 +6,16 @@ using Microsoft.IdentityModel.Tokens;
 using SomosRentWi.Api.Security;
 using SomosRentWi.Application.Auth.Interfaces;
 using SomosRentWi.Application.Auth.Services;
+using SomosRentWi.Application.Wallets.Interfaces;
+using SomosRentWi.Application.Wallets.Services;
 using SomosRentWi.Application.Cars.Interfaces;
 using SomosRentWi.Application.Cars.Services;
 using SomosRentWi.Application.Companies.Interfaces;
 using SomosRentWi.Application.Companies.Services;
-using SomosRentWi.Application.Security;
 using SomosRentWi.Application.Rentals.Interfaces;
 using SomosRentWi.Application.Rentals.Services;
-using SomosRentWi.Application.Security;
 using SomosRentWi.Application.Services;
+using SomosRentWi.Application.Security;
 using SomosRentWi.Application.Clients.Interfaces;
 using SomosRentWi.Application.Clients.Services;
 using SomosRentWi.Domain.IRepositories;
@@ -113,6 +114,7 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAdminClientService, AdminClientService>();
+builder.Services.AddScoped<IWalletQueryService, WalletQueryService>();
 
 // =============================================================
 // DEPENDENCY INJECTION: REPOSITORIES

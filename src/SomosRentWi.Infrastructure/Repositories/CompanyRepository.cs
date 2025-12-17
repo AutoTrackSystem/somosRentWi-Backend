@@ -40,6 +40,15 @@ public class CompanyRepository : ICompanyRepository
             .ToListAsync();
     }
 
+    public async Task<CompanyWallet?> GetWalletByUserIdAsync(int userId)
+    {
+        return await _context.Companies
+            .Where(c => c.UserId == userId)
+            .Select(c => c.Wallet)
+            .Include(w => w.Transactions)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> ExistsByNitAsync(string nit)
     {
         return await _context.Companies.AnyAsync(c => c.NitNumber == nit);
