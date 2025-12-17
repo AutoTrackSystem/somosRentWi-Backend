@@ -18,6 +18,7 @@ public class CarRepository : ICarRepository
     {
         return await _context.Cars
             .Include(c => c.Company)
+                .ThenInclude(c => c.Wallet)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
