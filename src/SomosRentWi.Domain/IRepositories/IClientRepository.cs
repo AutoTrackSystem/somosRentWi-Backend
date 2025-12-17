@@ -8,4 +8,5 @@ public interface IClientRepository
     Task<Client?> GetByUserIdAsync(int userId);
     Task AddAsync(Client client);
     Task UpdateAsync(Client client);
+    Task<List<Client>> GetAllAsync();
 }
