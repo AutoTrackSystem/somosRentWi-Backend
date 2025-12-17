@@ -15,6 +15,8 @@ using SomosRentWi.Application.Rentals.Interfaces;
 using SomosRentWi.Application.Rentals.Services;
 using SomosRentWi.Application.Security;
 using SomosRentWi.Application.Services;
+using SomosRentWi.Application.Clients.Interfaces;
+using SomosRentWi.Application.Clients.Services;
 using SomosRentWi.Domain.IRepositories;
 using SomosRentWi.Infrastructure;
 using SomosRentWi.Infrastructure.Persistence;
@@ -110,6 +112,7 @@ builder.Services.AddScoped<IRentalService, RentalService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IAdminClientService, AdminClientService>();
 
 // =============================================================
 // DEPENDENCY INJECTION: REPOSITORIES
@@ -117,11 +120,11 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IAdminWalletRepository, AdminWalletRepository>();
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-
 
 // =============================================================
 // CONTROLLERS
