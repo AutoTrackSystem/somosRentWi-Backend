@@ -14,6 +14,7 @@ public class RentalService : IRentalService
     private readonly ICarRepository _carRepository;
     private readonly IClientRepository _clientRepository;
     private readonly ICompanyRepository _companyRepository;
+    private readonly IAdminWalletRepository _adminWalletRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public RentalService(
@@ -21,12 +22,14 @@ public class RentalService : IRentalService
         ICarRepository carRepository,
         IClientRepository clientRepository,
         ICompanyRepository companyRepository,
+        IAdminWalletRepository adminWalletRepository,
         IUnitOfWork unitOfWork)
     {
         _rentalRepository = rentalRepository;
         _carRepository = carRepository;
         _clientRepository = clientRepository;
         _companyRepository = companyRepository;
+        _adminWalletRepository = adminWalletRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -88,6 +91,47 @@ public class RentalService : IRentalService
         // Note: We DO NOT set Car.Status = InUse here. 
         // Availability is determined by the HasOverlappingRentalAsync query.
         // Car status 'InUse' should only be set when physically delivered.
+
+        // Note: We DO NOT set Car.Status = InUse here. 
+        // Availability is determined by the HasOverlappingRentalAsync query.
+        // Car status 'InUse' should only be set when physically delivered.
+
+        // ==============================================================================
+        // FINANCIAL DISTRIBUTION (90% Company / 10% Admin)
+        // ==============================================================================
+        
+        // 1. Fetch Admin Wallet (Singleton)
+        var adminWallet = await _adminWalletRepository.GetAdminWalletAsync();
+        if (adminWallet == null)
+            throw new Exception("Critical: Admin Wallet not configured. Cannot process rental.");
+
+        // 2. Calculate Splits
+        var totalAmount = rental.TotalPrice;
+        var adminShare = totalAmount * 0.10m;
+        var companyShare = totalAmount * 0.90m;
+
+        // 3. Credit Company Wallet
+        if (rental.Company.Wallet == null)
+             throw new Exception("Critical: Company Wallet not found.");
+        
+        rental.Company.Wallet.Balance += companyShare;
+        rental.Company.Wallet.Transactions.Add(new WalletTransaction
+        {
+            Amount = companyShare,
+            Description = $"Payment for rental #{rental.StartDate.Ticks} (90%) - Car: {rental.Car.Brand} {rental.Car.Model}",
+            TransactionType = WalletTransactionType.RentalIncome,
+            TransactionDate = DateTime.UtcNow
+        });
+
+        // 4. Credit Admin Wallet
+        adminWallet.Balance += adminShare;
+        adminWallet.Transactions.Add(new AdminWalletTransaction
+        {
+            Amount = adminShare,
+            Description = $"Commission (10%) for rental - Company: {rental.Company.TradeName}",
+            TransactionType = WalletTransactionType.CommissionIncome
+            // Note: Date column does not exist in AdminWalletTransaction schema
+        });
 
         await _rentalRepository.AddAsync(rental);
         await _unitOfWork.SaveChangesAsync();
@@ -185,68 +229,12 @@ public class RentalService : IRentalService
         rental.Car.Status = CarStatus.Available;
         await _carRepository.UpdateAsync(rental.Car);
 
-        // Process Financial Transaction
-        if (rental.Company.Wallet == null)
-            throw new Exception("Company wallet not found"); 
+        // Update car status back to available
+        rental.Car.Status = CarStatus.Available;
+        await _carRepository.UpdateAsync(rental.Car);
 
-        // 1. Calculate Split
-        var commissionPercentage = 0.10m;
-        var commissionAmount = rental.TotalPrice * commissionPercentage;
-        var companyNetIncome = rental.TotalPrice - commissionAmount;
-
-        // 2. Get Platform Wallet (SomosRentWi)
-        // Using a fixed NIT for the Platform Company. Ideally from config "Platform:Nit".
-        var platformNit = "999999999-PLATFORM"; 
-        var platformCompany = await _companyRepository.GetByNitAsync(platformNit);
-        
-        if (platformCompany == null || platformCompany.Wallet == null)
-        {
-            // Fallback: If platform wallet doesn't exist, we might Log Error but still complete rental?
-            // Or fail? Business rule says we MUST transfer commission.
-            // For now, let's create it on the fly or fail. Failing is safer to force correct setup.
-            throw new Exception($"Platform Company/Wallet ({platformNit}) not configured. Cannot process commission.");
-        }
-
-        var platformWallet = platformCompany.Wallet;
-
-        // 3. Company Transaction (Net Income)
-        var companyTransaction = new WalletTransaction
-        {
-            CompanyWalletId = rental.Company.Wallet.Id,
-            Amount = companyNetIncome,
-            Description = $"Payment for rental #{rental.Id} (Net Income) - Car: {rental.Car.Brand} {rental.Car.Model}",
-            TransactionType = WalletTransactionType.RentalIncome,
-            TransactionDate = DateTime.UtcNow
-        };
-
-        rental.Company.Wallet.Balance += companyNetIncome;
-        rental.Company.Wallet.Transactions.Add(companyTransaction);
-
-        // 4. Platform Transaction (Commission)
-        var platformTransaction = new WalletTransaction
-        {
-            CompanyWalletId = platformWallet.Id,
-            Amount = commissionAmount,
-            Description = $"Commission (10%) for rental #{rental.Id} - From: {rental.Company.TradeName}",
-            TransactionType = WalletTransactionType.CommissionIncome,
-            TransactionDate = DateTime.UtcNow
-        };
-
-        platformWallet.Balance += commissionAmount;
-        // platformWallet.Transactions.Add(platformTransaction); // Need to assure collection is loaded?
-        // If GetByNitAsync includes Wallet, EF Core might not have loaded Transactions collection if eager loading wasn't explicit or lazy loading is off.
-        // It's safer to just add it to the Context if we are unsure, OR relying on the navigation property if we initialized the list in entity.
-        // Entity defines: public ICollection<WalletTransaction> Transactions { get; set; } = new List<WalletTransaction>();
-        // So it is safe to Add to the list even if it was empty from DB (it would be empty list if not loaded? No, EF nulls navigation if not loaded usually vs initialized. But let's check CompanyWallet constructor.
-        // CompanyWallet initializes it. BUT EF overrides it.
-        // Actually, if we just modify Balance and Add to context via the parent, it should be fine.
-        // Safest approach with EF Core when collection loading is uncertain:
-        // Use the Repository to Add the transaction entity explicitly? No, that breaks aggregate pattern.
-        // We will assume UnitOfWork saves changes to platformWallet because it is tracked.
-        
-        // However, to be 100% safe about the "Transactions" list being non-null:
-        if (platformWallet.Transactions == null) platformWallet.Transactions = new List<WalletTransaction>(); 
-        platformWallet.Transactions.Add(platformTransaction);
+        // NOTE: Financial distribution moved to Creation time per business requirements.
+        // Legacy logic removed to prevent double payment.
 
         await _rentalRepository.UpdateAsync(rental);
         // Note: We modified Company and PlatformCompany wallets. UnitOfWork.SaveChanges will persist all tracked entities.

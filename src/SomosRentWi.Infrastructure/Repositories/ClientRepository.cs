@@ -38,4 +38,11 @@ public class ClientRepository : IClientRepository
         _context.Clients.Update(client);
         return Task.CompletedTask;
     }
+
+    public async Task<List<Client>> GetAllAsync()
+    {
+        return await _context.Clients
+            .Include(c => c.User)
+            .ToListAsync();
+    }
 }
