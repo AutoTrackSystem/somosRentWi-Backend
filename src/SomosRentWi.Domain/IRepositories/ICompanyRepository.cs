@@ -9,6 +9,7 @@ public interface ICompanyRepository
     Task<List<Company>> GetAllAsync();
     Task<bool> ExistsByNitAsync(string nit);
     Task<Company?> GetByNitAsync(string nit);
+    Task<CompanyWallet?> GetWalletByUserIdAsync(int userId);
     Task AddAsync(Company company);
     Task UpdateAsync(Company company);
 }
